@@ -35,14 +35,14 @@ You need a note1 account ([note1.ai](https://note1.ai)). For token-based setups,
 2. Name: `note1` — URL: `https://api.note1.ai/mcp` — leave the OAuth fields empty
 3. **Add**, then approve access on the note1 consent page
 
-### Claude Desktop — via `npx @note1/mcp`
+### Claude Desktop — via `npx @note1ai/mcp`
 
 ```json
 {
   "mcpServers": {
     "note1": {
       "command": "npx",
-      "args": ["-y", "@note1/mcp"],
+      "args": ["-y", "@note1ai/mcp"],
       "env": { "NOTE1_API_TOKEN": "n1_YOURTOKEN" }
     }
   }
@@ -83,7 +83,7 @@ Workspaces connected to note1 get zero-config access: open a DM with **Slackbot*
 
 ## How this package works
 
-The hosted MCP server lives at `https://api.note1.ai/mcp`. This package (`@note1/mcp`) is a thin stdio bridge for clients that launch MCP servers as commands: it wraps [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) with the note1 URL and your `NOTE1_API_TOKEN`. Clients with native remote support (claude.ai, Cursor) can connect to the URL directly and skip it.
+The hosted MCP server lives at `https://api.note1.ai/mcp`. This package (`@note1ai/mcp`) is a thin stdio bridge for clients that launch MCP servers as commands: it wraps [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) with the note1 URL and your `NOTE1_API_TOKEN`. Clients with native remote support (claude.ai, Cursor) can connect to the URL directly and skip it.
 
 ## Security
 

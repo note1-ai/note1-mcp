@@ -29,7 +29,7 @@ if (!token) {
       '    "mcpServers": {',
       '      "note1": {',
       '        "command": "npx",',
-      '        "args": ["-y", "@note1/mcp"],',
+      '        "args": ["-y", "@note1ai/mcp"],',
       '        "env": { "NOTE1_API_TOKEN": "n1_..." }',
       '      }',
       '    }',

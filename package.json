@@ -1,7 +1,7 @@
 {
-  "name": "@note1/mcp",
+  "name": "@note1ai/mcp",
   "version": "1.0.0",
-  "description": "note1 MCP server connector — query your meeting notes, transcripts, and action items from Claude, ChatGPT, Cursor, or any MCP client.",
+  "description": "note1 MCP server connector \u2014 query your meeting notes, transcripts, and action items from Claude, ChatGPT, Cursor, or any MCP client.",
   "keywords": [
     "mcp",
     "model-context-protocol",
