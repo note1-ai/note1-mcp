@@ -2,7 +2,7 @@
 
 **Query your meeting notes, transcripts, and action items from Claude, ChatGPT, Cursor, or any MCP client.**
 
-[note1](https://note1.ai) is an AI meeting notetaker that joins your calls, records them, and turns every meeting into a searchable summary with action items. This MCP (Model Context Protocol) server connects AI tools directly to that meeting data — search across conversations with cited sources, export summaries and speaker-attributed transcripts, check which calendar events are being recorded, and schedule or manage recordings, all from a conversation.
+[note1](https://note1.ai) is an AI meeting notetaker that joins your calls, records them, and turns every meeting into a searchable summary with action items. This MCP (Model Context Protocol) server connects AI tools directly to that meeting data — search across conversations with cited sources, read who spoke how much and what was asked, export summaries and speaker-attributed transcripts, list, create and complete action items, manage topic trackers, check which calendar events are being recorded, and schedule or manage recordings, all from a conversation.
 
 Every tool acts with the authenticated user's own permissions: private meetings stay private, and results match exactly what the user sees in the note1 dashboard.
 
@@ -15,10 +15,18 @@ Every tool acts with the authenticated user's own permissions: private meetings 
 
 | Tool | Description |
 | --- | --- |
-| `note1_search_meetings` | Search meetings with AI-powered Deep Search. Mode `search` returns ranked snippets; mode `analysis` returns an AI answer with cited, timestamped sources. |
+| `note1_search_meetings` | Search meetings by keyword and meaning. Mode `search` returns ranked snippets; mode `analysis` returns an AI answer with cited, timestamped sources. |
 | `note1_list_meetings` | Browse meetings by status and date range, paginated. |
-| `note1_get_meeting` | One meeting's summary, sections, participants, status, and link. |
+| `note1_get_meeting` | One meeting's summary, sections, participants, status, recurring series (previous and next occurrence), and link. |
+| `note1_get_meeting_insights` | Speakers with talk-time share, questions asked and answered, topics with time ranges, topic-tracker mentions, or highlights. Use instead of the transcript for "who spoke most" or "what was asked". |
 | `note1_export_meeting` | Full summary and/or speaker-attributed transcript as paste-ready markdown or structured JSON. |
+| `note1_list_action_items` | Tracked action items for a meeting or the team, with status, owner, meeting, date and page; `mine` for your own. |
+| `note1_create_action_item` | Create an action item under a meeting or with none, for you, a named person, or nobody. |
+| `note1_update_action_item` | Edit text, description or owner, or mark open, completed or dismissed. |
+| `note1_list_topic_trackers` | Topic trackers you can see and where their phrases came up recently, with quotes. |
+| `note1_create_topic_tracker` | Create a tracker: a named set of phrases watched across meetings. Personal by default; team trackers take an admin. |
+| `note1_update_topic_tracker` | Rename a tracker or add and remove its phrases. |
+| `note1_delete_topic_tracker` | Delete a tracker. |
 | `note1_get_calendar` | Calendar events with per-event recording status. |
 | `note1_get_scheduling_link` | Prefilled calendar link (Google Meet / Teams) with the note1 bot pre-invited — create the event in your own calendar with recording pre-wired. |
 | `note1_schedule_recording` | Send note1's recording bot to an existing calendar event or any meeting link at a given time. |
@@ -78,6 +86,9 @@ Workspaces connected to note1 get zero-config access: open a DM with **Slackbot*
 - *"What did we decide about pricing in last week's meetings?"*
 - *"Export the transcript of yesterday's standup as markdown"*
 - *"Which of my meetings tomorrow are being recorded?"*
+- *"Who spoke the most in yesterday's standup, and which questions went unanswered?"*
+- *"What are my open action items? Mark the deck one as done."*
+- *"Start tracking mentions of pricing across our meetings"*
 - *"Record my 3pm meeting: https://meet.google.com/abc-defg-hij"*
 - *"Summarize all my meetings with the design team this month"*
 
