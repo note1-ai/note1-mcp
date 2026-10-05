@@ -2,7 +2,7 @@
 
 **Query your meeting notes, transcripts, and action items from Claude, ChatGPT, Cursor, or any MCP client.**
 
-[note1](https://note1.ai) is an AI meeting notetaker that joins your calls, records them, and turns every meeting into a searchable summary with action items. This MCP (Model Context Protocol) server connects AI tools directly to that meeting data — search across conversations with cited sources, read who spoke how much and what was asked, export summaries and speaker-attributed transcripts, list, create and complete action items, manage topic trackers, check which calendar events are being recorded, and schedule or manage recordings, all from a conversation.
+[note1](https://note1.ai) is an AI meeting notetaker that joins your calls, records them, and turns every meeting into a searchable summary with action items. This MCP (Model Context Protocol) server connects AI tools directly to that meeting data — search across conversations with cited sources, read who spoke how much and what was asked, export summaries and speaker-attributed transcripts, list, create and complete action items, manage topic trackers, read and update your meeting notes, check which calendar events are being recorded, and schedule or manage recordings, all from a conversation.
 
 Every tool acts with the authenticated user's own permissions: private meetings stay private, and results match exactly what the user sees in the note1 dashboard.
 
@@ -27,6 +27,8 @@ Every tool acts with the authenticated user's own permissions: private meetings 
 | `note1_create_topic_tracker` | Create a tracker: a named set of phrases watched across meetings. Personal by default; team trackers take an admin. |
 | `note1_update_topic_tracker` | Rename a tracker or add and remove its phrases. |
 | `note1_delete_topic_tracker` | Delete a tracker. |
+| `note1_get_meeting_notes` | A meeting's personal notes and shared agenda, each block with a ref. |
+| `note1_update_meeting_notes` | Change the notes block by block, or replace them with markdown. Personal by default; the shared agenda needs edit access. |
 | `note1_get_calendar` | Calendar events with per-event recording status. |
 | `note1_get_scheduling_link` | Prefilled calendar link (Google Meet / Teams) with the note1 bot pre-invited — create the event in your own calendar with recording pre-wired. |
 | `note1_schedule_recording` | Send note1's recording bot to an existing calendar event or any meeting link at a given time. |
