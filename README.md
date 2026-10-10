@@ -1,6 +1,6 @@
 # note1 MCP Server
 
-**Query your meeting notes, transcripts, and action items from Claude, ChatGPT, Cursor, or any MCP client.**
+**Upload recordings and work with your meeting notes, transcripts, and action items from Claude, ChatGPT, Cursor, or any MCP client.**
 
 [note1](https://note1.ai) is an AI meeting notetaker that joins your calls, records them, and turns every meeting into a searchable summary with action items. This MCP (Model Context Protocol) server connects AI tools directly to that meeting data — search across conversations with cited sources, read who spoke how much and what was asked, export summaries and speaker-attributed transcripts, list, create and complete action items, manage topic trackers, read and update your meeting notes, check which calendar events are being recorded, and schedule or manage recordings, all from a conversation.
 
@@ -34,6 +34,35 @@ Every tool acts with the authenticated user's own permissions: private meetings 
 | `note1_schedule_recording` | Send note1's recording bot to an existing calendar event or any meeting link at a given time. |
 | `note1_update_meeting` | Edit title, bot time/link, summary style, language, or video — optionally for a recurring series. |
 | `note1_cancel_recording` | Call off the bot for a meeting or its series. |
+| `note1_get_recording_upload_options` | Check upload policy and get a workspace-specific browser link without reserving a meeting. |
+| `note1_upload_recording` | Reserve one recording upload and return limited HTTP transfer instructions. File bytes stay outside MCP. |
+| `note1_get_recording_upload` | Read the original uploader's acknowledged chunks, byte progress, and meeting state. |
+| `note1_complete_recording_upload` | Confirm the recording and queue existing processing once. Safe to retry. |
+| `note1_cancel_recording_upload` | Cancel a pending upload; returns a conflict if completion already won. |
+
+## Upload an existing recording
+
+Recording uploads require `meetings:write` and the user's approval. One private meeting holds one immutable original audio/video recording; uploads never launch a meeting bot. Use `note1_get_recording_upload_options` first to check the current workspace limit (initially 2,000,000,000 bytes).
+
+For direct transfer, your assistant needs local-file access and an HTTP client. Call `note1_upload_recording` with metadata only:
+
+```json
+{
+  "requestId": "fe926ddd-03bf-4917-8f1b-b44d3f290049",
+  "title": "Customer interview",
+  "file": { "name": "interview.wav", "size": 123456, "mimeType": "audio/wav" },
+  "language": "en",
+  "style": "interview"
+}
+```
+
+The tool reserves a meeting and returns IDs plus `transfer` instructions. Outside MCP, **POST** each exact file slice using the returned `offset`, `size`, and integer chunk index in `urlTemplate`. Send the returned `Content-Type: application/octet-stream` and `X-Note1-Upload-Token` headers. Never pass bytes, base64, local paths, or account-wide credentials through upload tool arguments; never put the upload token in a URL.
+
+Check acknowledged chunks with `note1_get_recording_upload` after a lost response. Retry initialization with the **same requestId and frozen file metadata** to recover or renew the upload permission. Identical chunk retries do not charge twice. After all bytes are acknowledged, call `note1_complete_recording_upload` with `uploadId` and `fileId`; processing may still be running, so use `note1_get_meeting` for results. Keep the same resolved `teamId` throughout.
+
+If your assistant cannot transfer local files, use the browser link from `note1_get_recording_upload_options` **before reserving**. Sign in, verify or explicitly switch to the requested workspace, then choose and submit a file. If login sends you to the dashboard, reopen the assistant's link. Opening the page or form creates no meeting. The browser starts its own upload, not cross-tab resume; continue an existing direct reservation or confirm cancellation before starting over. Completion opens the meeting page, without an automatic callback into the chat.
+
+Initialization reserves one meeting allowance; normal storage, transfer, and processing accounting applies. Cancellation does not refund meeting allowance or transfer usage. If completion already won, check status and open the existing meeting rather than claiming cancellation.
 
 ## Quick start
 
@@ -93,10 +122,13 @@ Workspaces connected to note1 get zero-config access: open a DM with **Slackbot*
 - *"Start tracking mentions of pricing across our meetings"*
 - *"Record my 3pm meeting: https://meet.google.com/abc-defg-hij"*
 - *"Summarize all my meetings with the design team this month"*
+- *"Upload this interview recording and summarize it"*
 
 ## How this package works
 
 The hosted MCP server lives at `https://api.note1.ai/mcp`. This package (`@note1ai/mcp`) is a thin stdio bridge for clients that launch MCP servers as commands: it wraps [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) with the note1 URL and your `NOTE1_API_TOKEN`. Clients with native remote support (claude.ai, Cursor) can connect to the URL directly and skip it.
+
+Tool availability comes from the deployed hosted server and your granted scopes, not from this package's version. The bridge itself does not read or upload local files; use your client's HTTP/file tools or the browser fallback. Refresh the client's cached tool list when hosted tools change.
 
 ## Security
 
@@ -104,6 +136,7 @@ The hosted MCP server lives at `https://api.note1.ai/mcp`. This package (`@note1
 - OAuth connections appear under **Connected apps** with one-click revocation.
 - Write tools (schedule/update/cancel) are annotated so clients prompt for confirmation; read tools are marked read-only.
 - note1 holds no calendar write permissions — scheduling tools control note1's recording bot only and never create or modify calendar events.
+- Recording transfer permissions are private, upload-only secrets valid for one hour. Renewal rotates the permission without extending upload retention. Expiry, rotation, cancellation, completion, or workspace membership removal invalidates it. Revoking a PAT or OAuth connection alone does **not** immediately revoke an already issued upload permission; never paste the upload header into public logs or chats.
 
 ## Links
 
