@@ -2,7 +2,7 @@
 
 **Query your meeting notes, transcripts, and action items from Claude, ChatGPT, Cursor, or any MCP client.**
 
-[note1](https://note1.ai) is an AI meeting notetaker that joins your calls, records them, and turns every meeting into a searchable summary with action items. This MCP (Model Context Protocol) server connects AI tools directly to that meeting data — search across conversations with cited sources, read who spoke how much and what was asked, export summaries and speaker-attributed transcripts, list, create and complete action items, manage topic trackers, read and update your meeting notes, check which calendar events are being recorded, and schedule or manage recordings, all from a conversation.
+[note1](https://note1.ai) is an AI meeting notetaker that joins your calls, records them, and turns every meeting into a searchable summary with action items. This MCP (Model Context Protocol) server connects AI tools directly to that meeting data — search across conversations with cited sources, read who spoke how much and what was asked, export summaries and speaker-attributed transcripts, list, create and complete action items (and close their linked tickets in GitHub, Linear, Jira and more), manage topic trackers, connect and configure team integrations, read and update your meeting notes, check which calendar events are being recorded, and schedule or manage recordings, all from a conversation.
 
 Every tool acts with the authenticated user's own permissions: private meetings stay private, and results match exactly what the user sees in the note1 dashboard.
 
@@ -20,15 +20,22 @@ Every tool acts with the authenticated user's own permissions: private meetings 
 | `note1_get_meeting` | One meeting's summary, sections, participants, status, recurring series (previous and next occurrence), and link. |
 | `note1_get_meeting_insights` | Speakers with talk-time share, questions asked and answered, topics with time ranges, topic-tracker mentions, or highlights. Use instead of the transcript for "who spoke most" or "what was asked". |
 | `note1_export_meeting` | Full summary and/or speaker-attributed transcript as paste-ready markdown or structured JSON. |
-| `note1_list_action_items` | Tracked action items for a meeting or the team, with status, owner, meeting, date and page; `mine` for your own. |
+| `note1_list_action_items` | Tracked action items for a meeting or the team, with status, owner, meeting, date and page; `mine` for your own. Each item lists its `linkedTickets` (tool, identifier, url, close status) and `possiblyDone` when note1 saw signs it is already done, in a meeting or on the linked ticket. |
 | `note1_create_action_item` | Create an action item under a meeting or with none, for you, a named person, or nobody. |
-| `note1_update_action_item` | Edit text, description or owner, or mark open, completed or dismissed. |
+| `note1_update_action_item` | Edit text, description or owner, or mark open, completed or dismissed. Completing an item applies each connected tool's "done in note1" setting to its linked tickets; when tickets wait for a decision, ask the user and call again with `closeLinkedTickets: true` to close them. The result lists the linked tickets and their close status. |
 | `note1_list_topic_trackers` | Topic trackers you can see and where their phrases came up recently, with quotes. |
 | `note1_create_topic_tracker` | Create a tracker: a named set of phrases watched across meetings. Personal by default; team trackers take an admin. |
 | `note1_update_topic_tracker` | Rename a tracker or add and remove its phrases. |
 | `note1_delete_topic_tracker` | Delete a tracker. |
 | `note1_get_meeting_notes` | A meeting's personal notes and shared agenda, each block with a ref. |
 | `note1_update_meeting_notes` | Change the notes block by block, or replace them with markdown. Personal by default; the shared agenda needs edit access. |
+| `note1_list_integrations` | The team's integrations (Slack, Linear, Jira, GitHub, Asana, Trello, Todoist, Motion, Notion): connected or not, status (`active` or `needs_reauth`), workspace, where tickets go, settings, and whether you can manage them (`canManage`, team admins only). |
+| `note1_list_integration_options` | What an integration can be set to: its targets (teams, projects, repos, lists), Trello's done lists, or Slack's channels. |
+| `note1_update_integration` | Change an integration's settings by name or id: target, match mode, auto-create, closed-ticket mode, what happens to the ticket when an item is done in note1, Trello's done list (or none), Slack's default channel. Team admins only; needs the `integrations:write` scope. |
+| `note1_connect_integration` | Get the link to open in a browser to connect an integration (expires in 10 minutes). Motion points to the dashboard, since its API key should not be shared in a chat. Team admins only; needs `integrations:write`. |
+| `note1_disconnect_integration` | Disconnect an integration. Requires `confirmed: true` after the user agreed. Team admins only; needs `integrations:write`. |
+| `note1_sync_action_items` | Send one action item, or all of a meeting's, to the connected task tools. Needs edit access to the meeting. |
+| `note1_decide_ticket_suggestion` | Link, create or dismiss the ticket note1 suggested for an action item. |
 | `note1_get_calendar` | Calendar events with per-event recording status. |
 | `note1_get_scheduling_link` | Prefilled calendar link (Google Meet / Teams) with the note1 bot pre-invited — create the event in your own calendar with recording pre-wired. |
 | `note1_schedule_recording` | Send note1's recording bot to an existing calendar event or any meeting link at a given time. |
@@ -90,6 +97,8 @@ Workspaces connected to note1 get zero-config access: open a DM with **Slackbot*
 - *"Which of my meetings tomorrow are being recorded?"*
 - *"Who spoke the most in yesterday's standup, and which questions went unanswered?"*
 - *"What are my open action items? Mark the deck one as done."*
+- *"Mark the deck one as done and close its GitHub issue"*
+- *"Which integrations are connected? Send new action items from the standup to Linear's Growth team"*
 - *"Start tracking mentions of pricing across our meetings"*
 - *"Record my 3pm meeting: https://meet.google.com/abc-defg-hij"*
 - *"Summarize all my meetings with the design team this month"*
@@ -103,6 +112,7 @@ The hosted MCP server lives at `https://api.note1.ai/mcp`. This package (`@note1
 - Tokens are shown once at creation and stored only as SHA-256 hashes server-side. Revoke anytime under **Account → API tokens**.
 - OAuth connections appear under **Connected apps** with one-click revocation.
 - Write tools (schedule/update/cancel) are annotated so clients prompt for confirmation; read tools are marked read-only.
+- Managing team integrations is limited to team admins and sits behind its own OAuth scope, `integrations:write` ("Manage team integrations" on the consent page). Existing connections don't get it automatically; reconnect to grant it. Personal access tokens carry every scope.
 - note1 holds no calendar write permissions — scheduling tools control note1's recording bot only and never create or modify calendar events.
 
 ## Links
