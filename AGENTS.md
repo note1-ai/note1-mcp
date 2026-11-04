@@ -21,3 +21,5 @@ descriptions, annotations, permissions/scopes, and behavior.
   deployments. Preserve the user's branch/PR restrictions.
 
 Never inspect, expose, or commit environment files or npm credentials.
+
+Skills in skills/ are also served by note1.ai at /.well-known/agent-skills/. After changing them, run npm run skills:sync in the frontend repo and commit both.
