@@ -9,12 +9,114 @@ Every tool acts with the authenticated user's own permissions: private meetings 
 - **Server URL:** `https://api.note1.ai/mcp` (Streamable HTTP)
 - **Registry:** [`ai.note1/mcp`](https://registry.modelcontextprotocol.io/v0/servers?search=note1) in the official MCP Registry
 - **Docs:** [note1.ai/docs/mcp-server](https://note1.ai/docs/mcp-server)
-- **Auth:** OAuth 2.1 (automatic browser consent) or Personal Access Tokens
+- **Auth:** OAuth 2.1 (sign in to note1 in your browser) or a personal access token
+
+## Connect without this package
+
+Clients that support remote MCP servers can connect to `https://api.note1.ai/mcp` directly and sign in to note1 in the browser. You need neither this package nor a token.
+
+- **Claude and ChatGPT:** add a custom connector with the URL `https://api.note1.ai/mcp`, then sign in to note1 and approve access. Custom connectors depend on your plan.
+- **Claude Code:** run `claude mcp add --transport http note1 https://api.note1.ai/mcp`, then run `/mcp` and sign in.
+- **Cursor and VS Code:** add the URL as a remote MCP server and sign in when asked.
+- **Slack (Slackbot):** workspaces connected to note1 get zero-config access. Open a DM with **Slackbot**, choose **Apps**, and add **note1**. Slack identifies you by your workspace email.
+
+## Setup with this package
+
+You need a note1 account ([note1.ai](https://note1.ai)). Every client below runs the same command, `npx -y @note1ai/mcp`. Requires Node.js 18 or newer.
+
+The first time the server starts, the package opens note1 in your browser. Sign in and approve access. The sign-in is saved in `~/.mcp-auth` on your computer, so you do not repeat it every time.
+
+### Claude Desktop
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "note1": {
+      "command": "npx",
+      "args": ["-y", "@note1ai/mcp"]
+    }
+  }
+}
+```
+
+### Cursor
+
+Add to `~/.cursor/mcp.json` (or `.cursor/mcp.json` in a project). Cursor can also connect directly; use this package if Cursor's own sign-in fails.
+
+```json
+{
+  "mcpServers": {
+    "note1": {
+      "command": "npx",
+      "args": ["-y", "@note1ai/mcp"]
+    }
+  }
+}
+```
+
+### VS Code
+
+Add to `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "note1": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@note1ai/mcp"]
+    }
+  }
+}
+```
+
+### Claude Code
+
+```bash
+claude mcp add note1 -- npx -y @note1ai/mcp
+```
+
+### Any other MCP client
+
+Configure a stdio server with command `npx` and arguments `-y @note1ai/mcp`.
+
+### Use a token instead
+
+Browser sign-in needs a browser on the same computer as the MCP client. Over SSH, in CI or in a container, or to skip the sign-in, set `NOTE1_API_TOKEN` to a personal access token (starts with `n1_`). Create one at [note1.ai/dashboard/account/tokens](https://note1.ai/dashboard/account/tokens). It is shown once, so copy it.
+
+```json
+{
+  "mcpServers": {
+    "note1": {
+      "command": "npx",
+      "args": ["-y", "@note1ai/mcp"],
+      "env": { "NOTE1_API_TOKEN": "n1_YOURTOKEN" }
+    }
+  }
+}
+```
+
+With Claude Code:
+
+```bash
+claude mcp add note1 --env NOTE1_API_TOKEN=n1_YOURTOKEN -- npx -y @note1ai/mcp
+```
+
+## Configuration
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `NOTE1_API_TOKEN` | no | Your note1 personal access token. Must start with `n1_`. Without it, the package signs in through your browser. |
+
+The token is passed to `mcp-remote` through its environment, not on the command line, so it does not show up in process lists. Extra arguments given to the command are forwarded to `mcp-remote`. The server URL is fixed to `https://api.note1.ai/mcp`.
 
 ## Tools
 
 | Tool | Description |
 | --- | --- |
+| `note1_get_account` | Your plan, seats, what's left of this period's meeting allowance, the upload size limit, and your teams. Check it before uploading a recording. |
 | `note1_search_meetings` | Search meetings by keyword and meaning. Mode `search` returns ranked snippets; mode `analysis` returns an AI answer with cited, timestamped sources. |
 | `note1_list_meetings` | Browse meetings by status and date range, paginated. |
 | `note1_get_meeting` | One meeting's summary, sections, participants, status, recurring series (previous and next occurrence), and link. |
@@ -71,53 +173,27 @@ If your assistant cannot transfer local files, use the browser link from `note1_
 
 Initialization reserves one meeting allowance; normal storage, transfer, and processing accounting applies. Cancellation does not refund meeting allowance or transfer usage. If completion already won, check status and open the existing meeting rather than claiming cancellation.
 
-## Quick start
+## Agent Skills
 
-You need a note1 account ([note1.ai](https://note1.ai)). For token-based setups, create a Personal Access Token under **Account → API tokens** (shown once — copy it).
+The [`skills`](skills) folder has [Agent Skills](https://agentskills.io) that teach an agent how to use these tools well: citing meeting sources, handling linked tickets, asking before closing or disconnecting anything, and transferring recordings in chunks. They work with the MCP server; they do not replace it.
 
-### Claude (web) — OAuth, no token
+| Skill | Use it for |
+| --- | --- |
+| [`note1-meetings`](skills/note1-meetings/SKILL.md) | Finding, reading and exporting meetings, cited answers, insights, teams and private meetings |
+| [`note1-action-items`](skills/note1-action-items/SKILL.md) | Listing, creating and completing action items, linked tickets, syncing and ticket suggestions |
+| [`note1-integrations`](skills/note1-integrations/SKILL.md) | Seeing, configuring, connecting and disconnecting Slack and task tools (team admins) |
+| [`note1-recordings`](skills/note1-recordings/SKILL.md) | Scheduling and cancelling the recording bot, calendar status, and uploading an existing recording |
+| [`note1-notes-and-trackers`](skills/note1-notes-and-trackers/SKILL.md) | Meeting notes and agendas, and topic trackers |
 
-1. [Claude Settings → Connectors](https://claude.ai/settings/connectors) → **Add custom connector**
-2. Name: `note1` — URL: `https://api.note1.ai/mcp` — leave the OAuth fields empty
-3. **Add**, then approve access on the note1 consent page
-
-### Claude Desktop — via `npx @note1ai/mcp`
-
-```json
-{
-  "mcpServers": {
-    "note1": {
-      "command": "npx",
-      "args": ["-y", "@note1ai/mcp"],
-      "env": { "NOTE1_API_TOKEN": "n1_YOURTOKEN" }
-    }
-  }
-}
-```
-
-### Claude Code
+Install them with the [skills CLI](https://github.com/vercel-labs/skills):
 
 ```bash
-claude mcp add note1 --transport http https://api.note1.ai/mcp \
-  --header "Authorization: Bearer n1_YOURTOKEN"
+npx skills add note1-ai/note1-mcp
 ```
 
-### Cursor
+Or copy a skill folder into `~/.claude/skills/` (Claude Code, every project) or `.claude/skills/` (one project). In the Claude apps, upload the skill folder as a ZIP file in the Skills settings.
 
-```json
-{
-  "mcpServers": {
-    "note1": {
-      "url": "https://api.note1.ai/mcp",
-      "headers": { "Authorization": "Bearer n1_YOURTOKEN" }
-    }
-  }
-}
-```
-
-### Slack (Slackbot)
-
-Workspaces connected to note1 get zero-config access: open a DM with **Slackbot** → **Apps** → add **note1**. Slack identifies you by your workspace email.
+The same skills are published at [note1.ai/.well-known/agent-skills/index.json](https://note1.ai/.well-known/agent-skills/index.json) for agents that discover skills from a site.
 
 ## Example prompts
 
@@ -132,21 +208,31 @@ Workspaces connected to note1 get zero-config access: open a DM with **Slackbot*
 - *"Record my 3pm meeting: https://meet.google.com/abc-defg-hij"*
 - *"Summarize all my meetings with the design team this month"*
 - *"Upload this interview recording and summarize it"*
+- *"How much of this month's meeting allowance do I have left?"*
 
 ## How this package works
 
-The hosted MCP server lives at `https://api.note1.ai/mcp`. This package (`@note1ai/mcp`) is a thin stdio bridge for clients that launch MCP servers as commands: it wraps [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) with the note1 URL and your `NOTE1_API_TOKEN`. Clients with native remote support (claude.ai, Cursor) can connect to the URL directly and skip it.
+The hosted MCP server lives at `https://api.note1.ai/mcp`. This package (`@note1ai/mcp`) is a thin stdio bridge for clients that launch MCP servers as commands: it wraps [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) with the note1 URL, and either signs you in through your browser or sends your `NOTE1_API_TOKEN`. Clients with native remote support (claude.ai, Cursor) can connect to the URL directly and skip it.
 
 Tool availability comes from the deployed hosted server and your granted scopes, not from this package's version. The bridge itself does not read or upload local files; use your client's HTTP/file tools or the browser fallback. Refresh the client's cached tool list when hosted tools change.
 
 ## Security
 
 - Tokens are shown once at creation and stored only as SHA-256 hashes server-side. Revoke anytime under **Account → API tokens**.
-- OAuth connections appear under **Connected apps** with one-click revocation.
+- OAuth connections appear under **Connected apps** with one-click revocation. The browser sign-in of this package is stored in `~/.mcp-auth`; delete that folder to sign out locally.
+- This package passes `NOTE1_API_TOKEN` to `mcp-remote` through its environment, never on the command line, and never prints it.
 - Write tools (schedule/update/cancel) are annotated so clients prompt for confirmation; read tools are marked read-only.
 - Managing team integrations is limited to team admins and sits behind its own OAuth scope, `integrations:write` ("Manage team integrations" on the consent page). Existing connections don't get it automatically; reconnect to grant it. Personal access tokens carry every scope.
 - note1 holds no calendar write permissions — scheduling tools control note1's recording bot only and never create or modify calendar events.
 - Recording transfer permissions are private, upload-only secrets valid for one hour. Renewal rotates the permission without extending upload retention. Expiry, rotation, cancellation, completion, or workspace membership removal invalidates it. Revoking a PAT or OAuth connection alone does **not** immediately revoke an already issued upload permission; never paste the upload header into public logs or chats.
+
+## Pricing
+
+See [note1.ai/#pricing](https://note1.ai/#pricing).
+
+## Support
+
+support@note1.ai
 
 ## Links
 
@@ -156,4 +242,4 @@ Tool availability comes from the deployed hosted server and your granted scopes,
 
 ## License
 
-MIT
+MIT. Copyright (c) 2026 note1.ai (one1.dev).

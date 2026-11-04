@@ -29,8 +29,12 @@
     "note1-mcp": "bin/note1-mcp.js"
   },
   "files": [
-    "bin"
+    "bin",
+    "lib"
   ],
+  "scripts": {
+    "test": "node --test"
+  },
   "engines": {
     "node": ">=18"
   },
