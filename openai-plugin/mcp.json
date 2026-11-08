@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "note1": {
+      "type": "streamable-http",
+      "url": "https://api.note1.ai/mcp",
+      "extensions": {
+        "com.openai": {
+          "auth": {
+            "type": "oauth",
+            "client": {
+              "mode": "dcr"
+            }
+          }
+        }
+      }
+    }
+  }
+}

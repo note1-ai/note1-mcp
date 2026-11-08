@@ -33,7 +33,9 @@
     "lib"
   ],
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "plugin:validate": "node openai-plugin/scripts/validate.js",
+    "plugin:build": "bash openai-plugin/scripts/build-zip.sh"
   },
   "engines": {
     "node": ">=18"
