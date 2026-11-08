@@ -15,7 +15,7 @@ Every tool acts with the authenticated user's own permissions: private meetings 
 
 Clients that support remote MCP servers can connect to `https://api.note1.ai/mcp` directly and sign in to note1 in the browser. You need neither this package nor a token.
 
-- **Claude and ChatGPT:** add a custom connector with the URL `https://api.note1.ai/mcp`, then sign in to note1 and approve access. Custom connectors depend on your plan.
+- **Claude and ChatGPT:** add note1 from the Claude Connectors Directory or the ChatGPT plugin directory once listed, or add a custom connector with the URL `https://api.note1.ai/mcp`. Then sign in to note1 and approve access. Custom connectors depend on your plan.
 - **Claude Code:** run `claude mcp add --transport http note1 https://api.note1.ai/mcp`, then run `/mcp` and sign in.
 - **Cursor and VS Code:** add the URL as a remote MCP server and sign in when asked.
 - **Slack (Slackbot):** workspaces connected to note1 get zero-config access. Open a DM with **Slackbot**, choose **Apps**, and add **note1**. Slack identifies you by your workspace email.
@@ -118,11 +118,11 @@ The token is passed to `mcp-remote` through its environment, not on the command 
 | --- | --- |
 | `note1_get_account` | Your plan, seats, what's left of this period's meeting allowance, the upload size limit, and your teams. Check it before uploading a recording. |
 | `note1_search_meetings` | Search meetings by keyword and meaning. Mode `search` returns ranked snippets; mode `analysis` returns an AI answer with cited, timestamped sources. |
-| `note1_list_meetings` | Browse meetings by status and date range, paginated. |
+| `note1_list_meetings` | Browse meetings by status and date range. Returns up to 20 meetings per call, newest first, with a `nextPage` cursor when more exist. |
 | `note1_get_meeting` | One meeting's summary, sections, participants, status, recurring series (previous and next occurrence), and link. |
 | `note1_get_meeting_insights` | Speakers with talk-time share, questions asked and answered, topics with time ranges, topic-tracker mentions, or highlights. Use instead of the transcript for "who spoke most" or "what was asked". |
 | `note1_export_meeting` | Full summary and/or speaker-attributed transcript as paste-ready markdown or structured JSON. |
-| `note1_list_action_items` | Tracked action items for a meeting or the team, with status, owner, meeting, date and page; `mine` for your own. Each item lists its `linkedTickets` (tool, identifier, url, close status) and `possiblyDone` when note1 saw signs it is already done, in a meeting or on the linked ticket. |
+| `note1_list_action_items` | Tracked action items for a meeting or the team, with status, owner, meeting, date and page; `mine` for your own. Each item lists its `linkedTickets` (tool, identifier, url, close status) and `possiblyDone` when note1 saw signs it is already done, in a meeting or on the linked ticket. Returns at most 200 items; narrow with `meetingId`, `mine`, `status`, `before` or `after`. |
 | `note1_create_action_item` | Create an action item under a meeting or with none, for you, a named person, or nobody. |
 | `note1_update_action_item` | Edit text, description or owner, or mark open, completed or dismissed. Completing an item applies each connected tool's "done in note1" setting to its linked tickets; when tickets wait for a decision, ask the user and call again with `closeLinkedTickets: true` to close them. The result lists the linked tickets and their close status. |
 | `note1_list_topic_trackers` | Topic trackers you can see and where their phrases came up recently, with quotes. |
@@ -139,7 +139,7 @@ The token is passed to `mcp-remote` through its environment, not on the command 
 | `note1_sync_action_items` | Send one action item, or all of a meeting's, to the connected task tools. Needs edit access to the meeting. |
 | `note1_decide_ticket_suggestion` | Link, create or dismiss the ticket note1 suggested for an action item. |
 | `note1_get_calendar` | Calendar events with per-event recording status. |
-| `note1_get_scheduling_link` | Prefilled calendar link (Google Meet / Teams) with the note1 bot pre-invited — create the event in your own calendar with recording pre-wired. |
+| `note1_get_scheduling_link` | A prefilled calendar link (Google Meet or Teams) with the note1 bot pre-invited, which you open to create the event in your own calendar. Use it when the user wants to schedule or book a meeting. It changes nothing in note1, and note1 cannot create calendar events itself. |
 | `note1_schedule_recording` | Send note1's recording bot to an existing calendar event or any meeting link at a given time. |
 | `note1_update_meeting` | Edit title, bot time/link, summary style, language, or video — optionally for a recurring series. |
 | `note1_cancel_recording` | Call off the bot for a meeting or its series. |
@@ -195,6 +195,10 @@ Or copy a skill folder into `~/.claude/skills/` (Claude Code, every project) or 
 
 The same skills are published at [note1.ai/.well-known/agent-skills/index.json](https://note1.ai/.well-known/agent-skills/index.json) for agents that discover skills from a site.
 
+## ChatGPT plugin source
+
+[`openai-plugin/`](openai-plugin) holds the source of note1's ChatGPT plugin listing: `plugin.json`, `mcp.json` (the hosted server with OAuth dynamic client registration), brand assets and one consolidated skill. It is not part of the npm package. Run `npm run plugin:validate` to check it against the directory limits and `npm run plugin:build` to create `openai-plugin/dist/note1-plugin.zip` for upload at platform.openai.com/plugins.
+
 ## Example prompts
 
 - *"What did we decide about pricing in last week's meetings?"*
@@ -213,6 +217,8 @@ The same skills are published at [note1.ai/.well-known/agent-skills/index.json](
 ## How this package works
 
 The hosted MCP server lives at `https://api.note1.ai/mcp`. This package (`@note1ai/mcp`) is a thin stdio bridge for clients that launch MCP servers as commands: it wraps [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) with the note1 URL, and either signs you in through your browser or sends your `NOTE1_API_TOKEN`. Clients with native remote support (claude.ai, Cursor) can connect to the URL directly and skip it.
+
+The hosted server also reports its title, website, icons and usage instructions to clients when they connect (the MCP `serverInfo` and `instructions` fields).
 
 Tool availability comes from the deployed hosted server and your granted scopes, not from this package's version. The bridge itself does not read or upload local files; use your client's HTTP/file tools or the browser fallback. Refresh the client's cached tool list when hosted tools change.
 
