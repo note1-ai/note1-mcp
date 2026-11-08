@@ -109,10 +109,8 @@
             }
           ]
         },
-        "commerce": {
-          "enabled": false,
-          "description": "No purchases. Plan limits are described only informationally."
-        },
+        "commerce": false,
+        "commerce_description": "No purchases. Plan limits are described only informationally.",
         "demo_recording_url": "https://example.com/REPLACE-WITH-DEMO-VIDEO"
       },
       "publication": {

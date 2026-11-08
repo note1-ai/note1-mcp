@@ -123,7 +123,8 @@ test('a missing asset file fails', () => {
 test('commerce, countries and the review cases are present', () => {
   const p = readJson(pluginDir, 'plugin.json');
   const ext = p.extensions['com.openai'];
-  assert.equal(ext.review.commerce.enabled, false);
+  assert.equal(ext.review.commerce, false);
+  assert.equal(ext.review.commerce_description, 'No purchases. Plan limits are described only informationally.');
   assert.deepEqual(ext.publication.countries, []);
   assert.equal(ext.review.test_cases.positive.length, 5);
   assert.equal(ext.review.test_cases.negative.length, 3);
@@ -176,6 +177,20 @@ test('review cases need description, and positives need tools_triggered and expe
     assert.ok(errors.some(e => e.includes('positive[1].tools_triggered')));
     assert.ok(errors.some(e => e.includes('positive[2].expected_behavior')));
     assert.ok(errors.some(e => e.includes('negative[0].description')));
+  });
+});
+
+test('commerce must be a boolean with a non-empty commerce_description', () => {
+  withTmp(tmp => {
+    const dir = copyPluginTo(tmp);
+    const p = readJson(dir, 'plugin.json');
+    const { review } = p.extensions['com.openai'];
+    review.commerce = { enabled: false };
+    review.commerce_description = '  ';
+    writeJson(dir, 'plugin.json', p);
+    const errors = validatePlugin(dir);
+    assert.ok(errors.some(e => e.includes('commerce must be a boolean')));
+    assert.ok(errors.some(e => e.includes('commerce_description')));
   });
 });
 

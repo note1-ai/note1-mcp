@@ -13,6 +13,7 @@ const SCHEMA_KEYS = {
   positive: 'positive',
   negative: 'negative',
   commerce: 'commerce',
+  commerceDescription: 'commerce_description',
   demoUrl: 'demo_recording_url',
   releaseNotes: 'release_notes',
   countries: 'countries',
@@ -213,8 +214,13 @@ const validateManifest = (dir, errors) => {
   const cases = review?.[SCHEMA_KEYS.testCases];
   checkCases(errors, 'positive', cases?.[SCHEMA_KEYS.positive], LIMITS.positiveCases, true);
   checkCases(errors, 'negative', cases?.[SCHEMA_KEYS.negative], LIMITS.negativeCases, false);
-  if (typeof review?.[SCHEMA_KEYS.commerce]?.enabled !== 'boolean') {
-    errors.push('commerce.enabled is required');
+  if (typeof review?.[SCHEMA_KEYS.commerce] !== 'boolean') {
+    errors.push(`${SCHEMA_KEYS.commerce} must be a boolean`);
+  }
+
+  const commerceDescription = review?.[SCHEMA_KEYS.commerceDescription];
+  if (typeof commerceDescription !== 'string' || commerceDescription.trim() === '') {
+    errors.push(`${SCHEMA_KEYS.commerceDescription} is required`);
   }
 
   const demo = review?.[SCHEMA_KEYS.demoUrl];
