@@ -73,6 +73,7 @@
               "description": "Asks for speaker talk-time and unanswered questions in one meeting.",
               "prompt": "Who spoke the most in yesterday's standup, and which questions went unanswered?",
               "tools_triggered": [
+                "note1_search_meetings",
                 "note1_get_meeting_insights"
               ],
               "expected_behavior": "Finds yesterday's standup, then reads its speaker talk-time and questions from the meeting insights instead of the transcript."
@@ -89,6 +90,7 @@
               "description": "Asks to watch a phrase across meetings with a topic tracker.",
               "prompt": "Start tracking mentions of pricing across our meetings.",
               "tools_triggered": [
+                "note1_list_topic_trackers",
                 "note1_create_topic_tracker"
               ],
               "expected_behavior": "Checks existing trackers, then creates a personal topic tracker named for pricing with matching phrases."

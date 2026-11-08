@@ -9,6 +9,8 @@ descriptions, annotations, permissions/scopes, and behavior.
   metadata aligned with the hosted tools.
 - Bump `package.json` and the lockfile root version consistently. Check npm for
   the current release and choose an unpublished semantic version.
+- Keep `MCP_SERVER_VERSION` in the api (`src/mcp/metadata.ts`) equal to this
+  package's version when bumping.
 - Do not change bridge behavior or dependencies merely to force a client change;
   documentation and metadata still require a package update.
 - Run available tests/smoke checks and `npm publish --dry-run`; inspect the
