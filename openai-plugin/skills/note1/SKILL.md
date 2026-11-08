@@ -36,12 +36,12 @@ Confirm with the user, naming the exact item, before you:
 - disconnect an integration (`note1_disconnect_integration`, which needs `confirmed: true` only after the user agreed),
 - replace all notes with `replaceWith` in `note1_update_meeting_notes`, or edit the shared agenda that others see.
 
-Changing integrations is limited to team admins. When `note1_list_integrations` shows `canManage: false`, tell the user an admin has to do it.
+Changing integrations is limited to team admins. Never ask the user to paste a Motion API key into chat; `note1_connect_integration` sends them to the dashboard for Motion instead. When `note1_list_integrations` shows `canManage: false`, tell the user an admin has to do it.
 
 ## Recordings
 
 - `note1_schedule_recording` sends note1's bot to a calendar event or a meeting link. `note1_get_scheduling_link` returns a prefilled Google Meet or Teams calendar link that the user opens themselves. note1 holds no calendar write access and never creates calendar events.
-- To upload an existing recording: check `note1_get_account` and `note1_get_recording_upload_options`, ask the user for approval (a reservation uses one meeting allowance), reserve with `note1_upload_recording`, transfer the file bytes outside MCP with an HTTP client, then call `note1_complete_recording_upload`. Never send file bytes, base64, local paths or the upload token through tool arguments or into chat. If you cannot read local files or make HTTP requests, give the user the browser link from `note1_get_recording_upload_options` before reserving anything.
+- To upload an existing recording: check `note1_get_account` and `note1_get_recording_upload_options`, ask the user for approval (a reservation uses one meeting allowance), reserve with `note1_upload_recording`, transfer the file bytes outside MCP with an HTTP client, then call `note1_complete_recording_upload`. If a call fails and you retry `note1_upload_recording`, reuse the same `requestId` and identical file metadata so no second meeting is reserved. Never send file bytes, base64, local paths or the upload token through tool arguments or into chat. If you cannot read local files or make HTTP requests, give the user the browser link from `note1_get_recording_upload_options` before reserving anything.
 - Accepted does not mean ready: use `note1_get_meeting` later for the result.
 
 ## Example requests

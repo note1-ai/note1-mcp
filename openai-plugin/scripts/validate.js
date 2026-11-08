@@ -1,3 +1,5 @@
+'use strict';
+
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -16,6 +18,10 @@ const SCHEMA_KEYS = {
   countries: 'countries',
   mcpServers: 'mcpServers',
   auth: 'auth',
+  caseDescription: 'description',
+  casePrompt: 'prompt',
+  caseTools: 'tools_triggered',
+  caseBehavior: 'expected_behavior',
 };
 
 const LIMITS = {
@@ -29,7 +35,8 @@ const LIMITS = {
   defaultPrompt: 128,
   positiveCases: 5,
   negativeCases: 3,
-  minLogoSize: 256,
+  minLogoSize: 48,
+  pluginDisplayName: 'note1',
 };
 
 const URL_FIELDS = ['websiteURL', 'supportURL', 'privacyPolicyURL', 'termsOfServiceURL'];
@@ -101,23 +108,30 @@ const checkAsset = (dir, errors, field, relative) => {
   }
 };
 
-const checkCases = (errors, label, cases, minimum, needsTools) => {
-  if (!Array.isArray(cases) || cases.length < minimum) {
-    errors.push(`${label} test cases: at least ${minimum} required, found ${Array.isArray(cases) ? cases.length : 0}`);
+const checkCases = (errors, label, cases, expected, positive) => {
+  if (!Array.isArray(cases) || cases.length !== expected) {
+    errors.push(`${label} test cases: exactly ${expected} required, found ${Array.isArray(cases) ? cases.length : 0}`);
     return;
   }
 
+  const required = [SCHEMA_KEYS.caseDescription, SCHEMA_KEYS.casePrompt];
+  if (positive) {
+    required.push(SCHEMA_KEYS.caseBehavior);
+  }
+
   for (const [index, entry] of cases.entries()) {
-    if (typeof entry?.prompt !== 'string' || entry.prompt.trim() === '') {
-      errors.push(`${label}[${index}].prompt is required`);
+    for (const key of required) {
+      if (typeof entry?.[key] !== 'string' || entry[key].trim() === '') {
+        errors.push(`${label}[${index}].${key} is required`);
+      }
     }
 
-    if (typeof entry?.expected_behavior !== 'string' || entry.expected_behavior.trim() === '') {
-      errors.push(`${label}[${index}].expected_behavior is required`);
+    if (positive && (!Array.isArray(entry?.[SCHEMA_KEYS.caseTools]) || entry[SCHEMA_KEYS.caseTools].length === 0)) {
+      errors.push(`${label}[${index}].${SCHEMA_KEYS.caseTools} is required`);
     }
 
-    if (needsTools && (!Array.isArray(entry?.expected_tools) || entry.expected_tools.length === 0)) {
-      errors.push(`${label}[${index}].expected_tools is required`);
+    if (typeof entry?.[SCHEMA_KEYS.caseDescription] === 'string' && entry[SCHEMA_KEYS.caseDescription].length > 4000) {
+      errors.push(`${label}[${index}].${SCHEMA_KEYS.caseDescription} is longer than 4000 characters`);
     }
   }
 };
@@ -145,6 +159,10 @@ const validateManifest = (dir, errors) => {
   }
 
   checkString(errors, 'displayName', ui.displayName, LIMITS.displayName);
+  if (ui.displayName !== LIMITS.pluginDisplayName) {
+    errors.push(`displayName must be exactly "${LIMITS.pluginDisplayName}"`);
+  }
+
   checkString(errors, 'shortDescription', ui.shortDescription, LIMITS.shortDescription);
   checkString(errors, 'longDescription', ui.longDescription, LIMITS.longDescription);
   for (const field of ['developerName', 'category']) {

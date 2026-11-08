@@ -96,7 +96,19 @@ test('non-https URLs and a non-square or small logo fail', () => {
     const errors = validatePlugin(dir);
     assert.ok(errors.some(e => e.includes('websiteURL')));
     assert.ok(errors.some(e => e.includes('logo.png') && e.includes('square')));
-    assert.ok(errors.some(e => e.includes('logo.png') && e.includes('256')));
+    assert.ok(errors.some(e => e.includes('logo.png') && e.includes('at least 48x48')));
+  });
+});
+
+test('a square logo of 48px passes and one below 48px fails', () => {
+  withTmp(tmp => {
+    const dir = copyPluginTo(tmp);
+    writeFileSync(path.join(dir, 'assets/logo.png'), minimalPng(48, 48));
+    assert.deepEqual(errorsOnly(validatePlugin(dir)), []);
+    writeFileSync(path.join(dir, 'assets/logo.png'), minimalPng(40, 40));
+    const errors = validatePlugin(dir);
+    assert.ok(errors.some(e => e.includes('logo.png') && e.includes('at least 48x48')));
+    assert.ok(!errors.some(e => e.includes('logo.png') && e.includes('square')));
   });
 });
 
@@ -115,13 +127,66 @@ test('commerce, countries and the review cases are present', () => {
   assert.deepEqual(ext.publication.countries, []);
   assert.equal(ext.review.test_cases.positive.length, 5);
   assert.equal(ext.review.test_cases.negative.length, 3);
-  const tools = ext.review.test_cases.positive.flatMap(c => c.expected_tools);
+  const tools = ext.review.test_cases.positive.flatMap(c => c.tools_triggered);
   for (const tool of [
     'note1_search_meetings', 'note1_list_action_items', 'note1_update_action_item',
     'note1_get_meeting_insights', 'note1_get_calendar', 'note1_create_topic_tracker',
   ]) {
     assert.ok(tools.includes(tool), tool);
   }
+});
+
+test('review cases use the documented field names', () => {
+  const { positive, negative } = readJson(pluginDir, 'plugin.json').extensions['com.openai'].review.test_cases;
+  for (const entry of positive) {
+    assert.deepEqual(Object.keys(entry).sort(), ['description', 'expected_behavior', 'prompt', 'tools_triggered']);
+  }
+
+  for (const entry of negative) {
+    assert.deepEqual(Object.keys(entry).sort(), ['description', 'prompt']);
+  }
+});
+
+test('review case counts must be exactly 5 positive and 3 negative', () => {
+  withTmp(tmp => {
+    const dir = copyPluginTo(tmp);
+    const p = readJson(dir, 'plugin.json');
+    const cases = p.extensions['com.openai'].review.test_cases;
+    cases.positive.push({ ...cases.positive[0] });
+    cases.negative.push({ ...cases.negative[0] });
+    writeJson(dir, 'plugin.json', p);
+    const errors = validatePlugin(dir);
+    assert.ok(errors.some(e => e.includes('positive') && e.includes('exactly 5')));
+    assert.ok(errors.some(e => e.includes('negative') && e.includes('exactly 3')));
+  });
+});
+
+test('review cases need description, and positives need tools_triggered and expected_behavior', () => {
+  withTmp(tmp => {
+    const dir = copyPluginTo(tmp);
+    const p = readJson(dir, 'plugin.json');
+    const cases = p.extensions['com.openai'].review.test_cases;
+    delete cases.positive[0].description;
+    cases.positive[1].tools_triggered = [];
+    delete cases.positive[2].expected_behavior;
+    delete cases.negative[0].description;
+    writeJson(dir, 'plugin.json', p);
+    const errors = validatePlugin(dir);
+    assert.ok(errors.some(e => e.includes('positive[0].description')));
+    assert.ok(errors.some(e => e.includes('positive[1].tools_triggered')));
+    assert.ok(errors.some(e => e.includes('positive[2].expected_behavior')));
+    assert.ok(errors.some(e => e.includes('negative[0].description')));
+  });
+});
+
+test('displayName must be exactly note1', () => {
+  withTmp(tmp => {
+    const dir = copyPluginTo(tmp);
+    const p = readJson(dir, 'plugin.json');
+    p.extensions['com.openai'].interface.displayName = 'note1 MCP';
+    writeJson(dir, 'plugin.json', p);
+    assert.ok(validatePlugin(dir).some(e => e.includes('displayName') && e.includes('note1')));
+  });
 });
 
 test('mcp.json declares one streamable-http server with dcr auth', () => {

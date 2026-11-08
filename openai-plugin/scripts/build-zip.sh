@@ -23,3 +23,8 @@ with zipfile.ZipFile('dist/note1-plugin.zip', 'w', zipfile.ZIP_DEFLATED) as arch
 PY
 fi
 ls -l dist/note1-plugin.zip
+size=$(stat -c%s dist/note1-plugin.zip 2>/dev/null || stat -f%z dist/note1-plugin.zip)
+if [ "$size" -gt 104857600 ]; then
+  echo "error: dist/note1-plugin.zip is $size bytes; the limit is 100 MB" >&2
+  exit 1
+fi
