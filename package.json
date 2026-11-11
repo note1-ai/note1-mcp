@@ -35,7 +35,8 @@
   "scripts": {
     "test": "node --test",
     "plugin:validate": "node openai-plugin/scripts/validate.js",
-    "plugin:build": "bash openai-plugin/scripts/build-zip.sh"
+    "plugin:build": "bash openai-plugin/scripts/build-zip.sh",
+    "claude-plugin:sync": "node scripts/sync-claude-plugin.js"
   },
   "engines": {
     "node": ">=18"

@@ -25,3 +25,5 @@ descriptions, annotations, permissions/scopes, and behavior.
 Never inspect, expose, or commit environment files or npm credentials.
 
 Skills in skills/ are also served by note1.ai at /.well-known/agent-skills/. After changing them, run npm run skills:sync in the frontend repo and commit both.
+
+claude-plugin/ is the Claude directory plugin (also installable via .claude-plugin/marketplace.json). After changing skills/ or the package version, run npm run claude-plugin:sync; npm test fails while it is out of date. The Claude directory picks up each commit on master, so pushing publishes a new plugin version after its scan.

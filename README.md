@@ -16,7 +16,7 @@ Every tool acts with the authenticated user's own permissions: private meetings 
 Clients that support remote MCP servers can connect to `https://api.note1.ai/mcp` directly and sign in to note1 in the browser. You need neither this package nor a token.
 
 - **Claude and ChatGPT:** add note1 from the Claude Connectors Directory or the ChatGPT plugin directory once listed, or add a custom connector with the URL `https://api.note1.ai/mcp`. Then sign in to note1 and approve access. Custom connectors depend on your plan.
-- **Claude Code:** run `claude mcp add --transport http note1 https://api.note1.ai/mcp`, then run `/mcp` and sign in.
+- **Claude Code:** install the note1 plugin (server plus skills) with `/plugin install note1 --marketplace note1-ai/note1-mcp`, or add only the server with `claude mcp add --transport http note1 https://api.note1.ai/mcp`. Then run `/mcp` and sign in.
 - **Cursor and VS Code:** add the URL as a remote MCP server and sign in when asked.
 - **Slack (Slackbot):** workspaces connected to note1 get zero-config access. Open a DM with **Slackbot**, choose **Apps**, and add **note1**. Slack identifies you by your workspace email.
 
