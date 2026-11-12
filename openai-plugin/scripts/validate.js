@@ -295,6 +295,17 @@ const validateMcp = (dir, errors) => {
     errors.push('mcp.json auth.client must not set clientId or tokenEndpointAuthMethod for cimd/dcr');
   }
 
+  for (const field of ['authorizationUrl', 'tokenUrl', 'registrationUrl', 'resource']) {
+    if (auth && !isHttps(auth[field])) {
+      errors.push(`mcp.json auth.${field} must be an https URL`);
+    }
+  }
+
+  if (auth && (!Array.isArray(auth.defaultScopes) || auth.defaultScopes.length === 0
+    || !auth.defaultScopes.every(scope => typeof scope === 'string' && scope.trim() !== ''))) {
+    errors.push('mcp.json auth.defaultScopes must list the server scopes');
+  }
+
   if (JSON.stringify(mcp).includes('clientSecret')) {
     errors.push('mcp.json must not contain clientSecret');
   }

@@ -211,7 +211,25 @@ test('mcp.json declares one streamable-http server with cimd auth (dcr fallback)
   assert.equal(servers.length, 1);
   assert.equal(servers[0].type, 'streamable-http');
   assert.equal(servers[0].url, 'https://api.note1.ai/mcp');
-  assert.deepEqual(servers[0].extensions['com.openai'].auth, { type: 'oauth', client: { mode: 'cimd' } });
+  assert.deepEqual(servers[0].extensions['com.openai'].auth, {
+    type: 'oauth',
+    client: { mode: 'cimd' },
+    authorizationUrl: 'https://api.note1.ai/oauth/authorize',
+    tokenUrl: 'https://api.note1.ai/oauth/token',
+    registrationUrl: 'https://api.note1.ai/oauth/register',
+    resource: 'https://api.note1.ai/mcp',
+    defaultScopes: ['meetings:read', 'calendar:read', 'meetings:write', 'integrations:write'],
+  });
+});
+
+test('mcp.json without explicit OAuth endpoints fails validation', () => {
+  withTmp(tmp => {
+    const dir = copyPluginTo(tmp);
+    const mcp = readJson(dir, 'mcp.json');
+    delete mcp.mcpServers.note1.extensions['com.openai'].auth.tokenUrl;
+    writeJson(dir, 'mcp.json', mcp);
+    assert.ok(validatePlugin(dir).some(e => e.includes('tokenUrl')));
+  });
 });
 
 test('a bad mcp.json fails validation', () => {

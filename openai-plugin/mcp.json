@@ -10,7 +10,12 @@
             "type": "oauth",
             "client": {
               "mode": "cimd"
-            }
+            },
+            "authorizationUrl": "https://api.note1.ai/oauth/authorize",
+            "tokenUrl": "https://api.note1.ai/oauth/token",
+            "registrationUrl": "https://api.note1.ai/oauth/register",
+            "resource": "https://api.note1.ai/mcp",
+            "defaultScopes": ["meetings:read", "calendar:read", "meetings:write", "integrations:write"]
           }
         }
       }
