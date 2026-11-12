@@ -37,17 +37,20 @@ State what changed once the call returns.
 
 Only for a file the user already has (not for live meetings). The upload tools need the `meetings:write` scope and the **user's approval**. One upload becomes one private meeting; no bot is launched.
 
-1. **Check the account and the limit.** Call `note1_get_account` when it is available (plan, what is left of this period's meeting allowance, size limit) and always call `note1_get_recording_upload_options`. It returns `maxSizeBytes`, the allowed `extensions` and a `browserUploadUrl`. Stop and tell the user if the file is too large, has the wrong type or the allowance is used up. No meeting is reserved yet.
-2. **Ask for approval.** Initializing uses one meeting allowance, and cancelling or abandoning does not give it back. Say which file, which team and the title you will use.
-3. **Reserve.** `note1_upload_recording` takes a fresh UUID `requestId`, `title`, `file: { name, size, mimeType? }` (the file's base name only, never a local path), optional `language` and `style`. It returns `uploadId`, `fileId`, and `transfer` with the method, a `urlTemplate`, headers and the exact `chunks` (`index`, `offset`, `size`). Never send bytes, base64 or paths through MCP arguments.
-4. **Transfer outside MCP.** You need local file access and an HTTP client. For each chunk, **POST** the exact slice (`offset`, `size`) to `urlTemplate` with only `{index}` replaced by the integer chunk index. Send the returned `Content-Type: application/octet-stream` and `X-Note1-Upload-Token` headers. Never put the upload token in a URL, and never print it in chat or logs. Retrying an identical chunk is safe and is not charged twice.
-5. **Recover from a lost response.** `note1_get_recording_upload` (with `uploadId`) shows the acknowledged chunks and meeting state. To renew an expired permission (it lasts one hour), call `note1_upload_recording` again with the **same `requestId` and identical file metadata**. A new `requestId` would reserve another meeting.
-6. **Complete.** When every chunk is acknowledged, call `note1_complete_recording_upload` with `uploadId` and `fileId`. It is safe to retry. Accepted does not mean ready: transcription and summary run afterwards, so use `note1_get_meeting` later and give the user the `meetingUrl`.
-7. **Cancel** a pending upload only if the user asks: `note1_cancel_recording_upload`. If completion already won it returns a conflict; open the existing meeting instead of claiming it was canceled.
+1. **Check the account and the limit.** Call `note1_get_account` when it is available (plan, what is left of this period's meeting allowance, size limit) and always call `note1_get_recording_upload_options`. It returns `maxSizeBytes`, the allowed `extensions`, a `connectivityCheckUrl` and a `browserUploadUrl`. Stop and tell the user if the file is too large, has the wrong type or the allowance is used up. No meeting is reserved yet.
+2. **Choose the path before reserving.** Transfer directly (steps 3 to 8) only if you can read the file **and** a GET of `connectivityCheckUrl` succeeds from where the bytes will be sent, for example a chat attachment in Claude's code-execution sandbox. Otherwise call `note1_open_recording_upload` (optional `teamId`) and stop: in Claude web and desktop it shows an upload card where the user picks the file, edits the title and presses Upload, which is their approval and uses one allowance. The card reports the meeting link back to you. Opening it reserves nothing. Clients without cards get a `browserUploadUrl` to give the user.
+3. **Ask for approval.** Initializing uses one meeting allowance, and cancelling or abandoning does not give it back. Say which file, which team and the title you will use.
+4. **Reserve.** `note1_upload_recording` takes a fresh UUID `requestId`, `title`, `file: { name, size, mimeType? }` (the file's base name only, never a local path), optional `language` and `style`. It returns `uploadId`, `fileId`, and `transfer` with the method, a `urlTemplate`, headers and the exact `chunks` (`index`, `offset`, `size`). Never send bytes, base64 or paths through MCP arguments.
+5. **Transfer outside MCP.** For each chunk, **POST** the exact slice (`offset`, `size`) to `urlTemplate` with only `{index}` replaced by the integer chunk index. Send the returned `Content-Type: application/octet-stream` and `X-Note1-Upload-Token` headers. Never put the upload token in a URL, and never print it in chat or logs. Retrying an identical chunk is safe and is not charged twice.
+6. **Recover from a lost response.** `note1_get_recording_upload` (with `uploadId`) shows the acknowledged chunks and meeting state. To renew an expired permission (it lasts one hour), call `note1_upload_recording` again with the **same `requestId` and identical file metadata**. A new `requestId` would reserve another meeting.
+7. **Complete.** When every chunk is acknowledged, call `note1_complete_recording_upload` with `uploadId` and `fileId`. It is safe to retry. Accepted does not mean ready: transcription and summary run afterwards, so use `note1_get_meeting` later and give the user the `meetingUrl`.
+8. **Cancel** a pending upload only if the user asks: `note1_cancel_recording_upload`. If completion already won it returns a conflict; open the existing meeting instead of claiming it was canceled.
 
 Keep the same resolved `teamId` on every call of one upload.
 
-**No local file access or HTTP client?** Give the user the `browserUploadUrl` from `note1_get_recording_upload_options` **before** reserving anything. They sign in, check the workspace and submit the file themselves. Opening the page creates nothing, the browser starts its own upload (it does not resume one you reserved), and finishing it does not notify the chat. Before switching from a direct upload to the browser, continue or cancel the existing reservation, since starting over uses another allowance.
+**Reserved but cannot finish the transfer?** Call `note1_open_recording_upload` with that `uploadId` so the user finishes it in the card with the same file, without using another allowance. Do not reserve a new upload: it would use another allowance.
+
+**Client without cards?** Give the user the `browserUploadUrl` **before** reserving anything. They sign in, check the workspace and submit the file themselves. Opening the page creates nothing, the browser starts its own upload (it does not resume one you reserved), and finishing it does not notify the chat. Before switching from a direct upload to the browser, continue or cancel the existing reservation, since starting over uses another allowance.
 
 ## Example requests
 
@@ -57,3 +60,5 @@ Keep the same resolved `teamId` on every call of one upload.
 - "Move the bot for the vendor call to 4:30pm."
 - "Stop recording the weekly sync from now on."
 - "Upload ~/Recordings/interview.wav and summarize it."
+- "Upload this attached recording."
+- "I want to upload a recording of yesterday's call."

@@ -143,17 +143,26 @@ The token is passed to `mcp-remote` through its environment, not on the command 
 | `note1_schedule_recording` | Send note1's recording bot to an existing calendar event or any meeting link at a given time. |
 | `note1_update_meeting` | Edit title, bot time/link, summary style, language, or video — optionally for a recurring series. |
 | `note1_cancel_recording` | Call off the bot for a meeting or its series. |
-| `note1_get_recording_upload_options` | Check upload policy and get a workspace-specific browser link without reserving a meeting. |
+| `note1_get_recording_upload_options` | Check upload policy, a connectivity check URL, and a workspace-specific browser link without reserving a meeting. |
+| `note1_open_recording_upload` | Show an interactive upload card where the user picks a file, edits the title, and uploads it to note1 with progress. Opening it reserves nothing; pass `uploadId` to finish a pending upload with the same file. Text-only clients get the browser link instead. |
 | `note1_upload_recording` | Reserve one recording upload and return limited HTTP transfer instructions. File bytes stay outside MCP. |
 | `note1_get_recording_upload` | Read the original uploader's acknowledged chunks, byte progress, and meeting state. |
 | `note1_complete_recording_upload` | Confirm the recording and queue existing processing once. Safe to retry. |
 | `note1_cancel_recording_upload` | Cancel a pending upload; returns a conflict if completion already won. |
 
+The upload card also calls `note1_app_start_recording_upload`, `note1_app_renew_recording_transfer`, and `note1_app_complete_recording_upload`. They are visible only to the card, not to the model, and need `meetings:write`.
+
 ## Upload an existing recording
 
-Recording uploads require `meetings:write` and the user's approval. One private meeting holds one immutable original audio/video recording; uploads never launch a meeting bot. Use `note1_get_recording_upload_options` first to check the current workspace limit (initially 2,000,000,000 bytes).
+Recording uploads require `meetings:write` and the user's approval. One private meeting holds one immutable original audio/video recording; uploads never launch a meeting bot. Use `note1_get_recording_upload_options` first to check the current workspace limit (initially 2,000,000,000 bytes). It also returns `connectivityCheckUrl` (`https://api.note1.ai/health/status`).
 
-For direct transfer, your assistant needs local-file access and an HTTP client. Call `note1_upload_recording` with metadata only:
+Pick the path before reserving anything:
+
+- **Direct transfer** when the assistant can read the file and reach note1, for example a chat attachment in Claude's code-execution sandbox. First GET `connectivityCheckUrl` from the place that will send the bytes; continue only if it responds.
+- **Upload card** (`note1_open_recording_upload`) when the assistant cannot read the file or the connectivity check fails. In MCP Apps hosts (Claude web and desktop) it shows a card where the user picks or drops an audio/video file, edits the meeting title, and selects **Upload**. The card reserves, uploads chunks directly to note1 with progress, completes, and tells the assistant the meeting link. Opening the card reserves nothing; choosing the file and pressing Upload is the user's approval and uses one meeting allowance.
+- **Browser link** for text-only clients without cards: `note1_open_recording_upload` and `note1_get_recording_upload_options` return `browserUploadUrl`.
+
+For direct transfer, call `note1_upload_recording` with metadata only:
 
 ```json
 {
@@ -169,7 +178,9 @@ The tool reserves a meeting and returns IDs plus `transfer` instructions. Outsid
 
 Check acknowledged chunks with `note1_get_recording_upload` after a lost response. Retry initialization with the **same requestId and frozen file metadata** to recover or renew the upload permission. Identical chunk retries do not charge twice. After all bytes are acknowledged, call `note1_complete_recording_upload` with `uploadId` and `fileId`; processing may still be running, so use `note1_get_meeting` for results. Keep the same resolved `teamId` throughout.
 
-If your assistant cannot transfer local files, use the browser link from `note1_get_recording_upload_options` **before reserving**. Sign in, verify or explicitly switch to the requested workspace, then choose and submit a file. If login sends you to the dashboard, reopen the assistant's link. Opening the page or form creates no meeting. The browser starts its own upload, not cross-tab resume; continue an existing direct reservation or confirm cancellation before starting over. Completion opens the meeting page, without an automatic callback into the chat.
+If the assistant reserved an upload but cannot finish the transfer, call `note1_open_recording_upload` with that `uploadId`: the user finishes it in the card with the same file, without using another allowance. A new upload would use another allowance.
+
+In clients without cards, use the browser link from `note1_get_recording_upload_options` **before reserving**. Sign in, verify or explicitly switch to the requested workspace, then choose and submit a file. If login sends you to the dashboard, reopen the assistant's link. Opening the page or form creates no meeting. The browser starts its own upload, not cross-tab resume; continue an existing direct reservation or confirm cancellation before starting over. Completion opens the meeting page, without an automatic callback into the chat.
 
 Initialization reserves one meeting allowance; normal storage, transfer, and processing accounting applies. Cancellation does not refund meeting allowance or transfer usage. If completion already won, check status and open the existing meeting rather than claiming cancellation.
 
@@ -212,6 +223,7 @@ The same skills are published at [note1.ai/.well-known/agent-skills/index.json](
 - *"Record my 3pm meeting: https://meet.google.com/abc-defg-hij"*
 - *"Summarize all my meetings with the design team this month"*
 - *"Upload this interview recording and summarize it"*
+- *"I want to upload a recording"* (opens the upload card in Claude)
 - *"How much of this month's meeting allowance do I have left?"*
 
 ## How this package works
@@ -220,7 +232,7 @@ The hosted MCP server lives at `https://api.note1.ai/mcp`. This package (`@note1
 
 The hosted server also reports its title, website, icons and usage instructions to clients when they connect (the MCP `serverInfo` and `instructions` fields).
 
-Tool availability comes from the deployed hosted server and your granted scopes, not from this package's version. The bridge itself does not read or upload local files; use your client's HTTP/file tools or the browser fallback. Refresh the client's cached tool list when hosted tools change.
+Tool availability comes from the deployed hosted server and your granted scopes, not from this package's version. The bridge itself does not read or upload local files; use your client's HTTP/file tools, the upload card, or the browser fallback. Refresh the client's cached tool list when hosted tools change.
 
 ## Security
 
@@ -231,6 +243,8 @@ Tool availability comes from the deployed hosted server and your granted scopes,
 - Managing team integrations is limited to team admins and sits behind its own OAuth scope, `integrations:write` ("Manage team integrations" on the consent page). Existing connections don't get it automatically; reconnect to grant it. Personal access tokens carry every scope.
 - note1 holds no calendar write permissions — scheduling tools control note1's recording bot only and never create or modify calendar events.
 - Recording transfer permissions are private, upload-only secrets valid for one hour. Renewal rotates the permission without extending upload retention. Expiry, rotation, cancellation, completion, or workspace membership removal invalidates it. Revoking a PAT or OAuth connection alone does **not** immediately revoke an already issued upload permission; never paste the upload header into public logs or chats.
+- Upload chunk requests accept cross-origin requests from any origin without credentials, so upload cards can send them. Cookies and account credentials are not used there; the upload token header is the only credential.
+- `note1_open_recording_upload` is read-only and reserves nothing. The upload card reserves a meeting only after the user chooses a file and presses Upload.
 
 ## Pricing
 
