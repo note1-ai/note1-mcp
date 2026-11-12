@@ -1,4 +1,5 @@
 {
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
     "note1": {
       "type": "streamable-http",
@@ -8,7 +9,7 @@
           "auth": {
             "type": "oauth",
             "client": {
-              "mode": "dcr"
+              "mode": "cimd"
             }
           }
         }

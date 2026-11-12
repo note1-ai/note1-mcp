@@ -40,6 +40,7 @@ const LIMITS = {
   pluginDisplayName: 'note1',
 };
 
+const MCP_SCHEMA_URL = 'https://agent-plugins.org/schemas/1.0.0/mcp.schema.json';
 const URL_FIELDS = ['websiteURL', 'supportURL', 'privacyPolicyURL', 'termsOfServiceURL'];
 const ASSET_FIELDS = ['logo', 'logoDark', 'composerIcon', 'composerIconDark'];
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
@@ -258,6 +259,10 @@ const validateMcp = (dir, errors) => {
     return;
   }
 
+  if (mcp.$schema !== MCP_SCHEMA_URL) {
+    errors.push(`mcp.json must declare "$schema": "${MCP_SCHEMA_URL}" (without it the portal detects no MCP server)`);
+  }
+
   const servers = Object.values(mcp[SCHEMA_KEYS.mcpServers] ?? {});
   if (servers.length !== 1) {
     errors.push(`mcp.json must declare exactly one server, found ${servers.length}`);
@@ -273,9 +278,19 @@ const validateMcp = (dir, errors) => {
     errors.push('mcp.json server url must be an https URL');
   }
 
+  if (server.headers !== undefined && Object.keys(server.headers).length > 0) {
+    errors.push('mcp.json server must not set headers (public submission rejects nonempty headers)');
+  }
+
   const auth = server.extensions?.[SCHEMA_KEYS.vendor]?.[SCHEMA_KEYS.auth];
-  if (auth?.type !== 'oauth' || auth?.client?.mode !== 'dcr') {
-    errors.push('mcp.json server auth must be oauth with client mode dcr');
+  if (auth?.type !== 'oauth' || !['cimd', 'dcr'].includes(auth?.client?.mode)) {
+    errors.push('mcp.json server auth must be oauth with client mode cimd (preferred, falls back to dcr) or dcr');
+  } else if (auth.client.clientId !== undefined || auth.client.tokenEndpointAuthMethod !== undefined) {
+    errors.push('mcp.json auth.client must not set clientId or tokenEndpointAuthMethod for cimd/dcr');
+  }
+
+  if (JSON.stringify(mcp).includes('clientSecret')) {
+    errors.push('mcp.json must not contain clientSecret');
   }
 };
 
