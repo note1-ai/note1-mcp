@@ -99,8 +99,7 @@
           ]
         },
         "commerce": false,
-        "commerce_description": "No purchases. Plan limits are described only informationally.",
-        "demo_recording_url": "https://example.com/REPLACE-WITH-DEMO-VIDEO"
+        "commerce_description": "No purchases. Plan limits are described only informationally."
       },
       "publication": {
         "release_notes": "Initial ChatGPT plugin release: 32 tools for meetings, action items, notes, trackers, integrations and recordings, with interactive action-item, talk-time and note-suggestion cards.",

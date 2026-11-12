@@ -11,7 +11,7 @@ const root = path.join(__dirname, '..');
 const pluginDir = path.join(root, 'openai-plugin');
 const readJson = (dir, file) => JSON.parse(readFileSync(path.join(dir, file), 'utf8'));
 const writeJson = (dir, file, value) => writeFileSync(path.join(dir, file), JSON.stringify(value, null, 2));
-const errorsOnly = list => list.filter(entry => !entry.startsWith('warn:'));
+const errorsOnly = list => list.filter(entry => !entry.startsWith('warn:') && !entry.startsWith('info:'));
 
 const copyPluginTo = tmp => {
   const dir = path.join(tmp, 'plugin');
@@ -231,6 +231,16 @@ test('the skill has frontmatter matching its folder', () => {
   assert.ok(match[2].length <= 1024);
 });
 
-test('placeholder demo video is only a warning', () => {
-  assert.ok(validatePlugin(pluginDir).some(e => e.startsWith('warn:') && e.includes('demo_recording_url')));
+test('absent demo video is only an info line', () => {
+  assert.ok(validatePlugin(pluginDir).some(e => e.startsWith('info:') && e.includes('demo_recording_url')));
+});
+
+test('placeholder demo video is an error', () => {
+  withTmp(tmp => {
+    const dir = copyPluginTo(tmp);
+    const manifest = readJson(dir, 'plugin.json');
+    manifest.extensions['com.openai'].review.demo_recording_url = 'https://example.com/REPLACE-WITH-DEMO-VIDEO';
+    writeJson(dir, 'plugin.json', manifest);
+    assert.ok(errorsOnly(validatePlugin(dir)).some(e => e.includes('demo_recording_url')));
+  });
 });

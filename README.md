@@ -197,7 +197,7 @@ The same skills are published at [note1.ai/.well-known/agent-skills/index.json](
 
 ## ChatGPT plugin source
 
-[`openai-plugin/`](openai-plugin) holds the source of note1's ChatGPT plugin listing: `plugin.json`, `mcp.json` (the hosted server with OAuth dynamic client registration), brand assets and one consolidated skill. It is not part of the npm package. The manifest `name` must equal the id of the existing plugin in the OpenAI portal (`app-6a77b05b7a2c8191af3c69c7bf371565`; lowercase letters, numbers and single hyphens, at most 64 characters), while `displayName` stays "note1". Run `npm run plugin:validate` to check it against the directory limits and `npm run plugin:build` to create `openai-plugin/dist/note1-plugin.zip` for upload at platform.openai.com/plugins.
+[`openai-plugin/`](openai-plugin) holds the source of note1's ChatGPT plugin listing: `plugin.json`, `mcp.json` (the hosted server with OAuth dynamic client registration), brand assets and one consolidated skill. It is not part of the npm package. The manifest `name` must equal the id of the existing plugin in the OpenAI portal (`app-6a77b05b7a2c8191af3c69c7bf371565`; lowercase letters, numbers and single hyphens, at most 64 characters), while `displayName` stays "note1". Run `npm run plugin:validate` to check it against the directory limits and `npm run plugin:build` to create `openai-plugin/dist/note1-plugin.zip` for upload at platform.openai.com/plugins. The demo video URL (`demo_recording_url`) is deliberately not in the ZIP: enter it in the portal under Review information → Supporting content before submitting (a value in the package would be read-only there). The validator rejects the placeholder if it is ever re-added.
 
 ## Example prompts
 

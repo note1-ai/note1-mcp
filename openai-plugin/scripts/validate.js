@@ -241,10 +241,12 @@ const validateManifest = (dir, errors) => {
   }
 
   const demo = review?.[SCHEMA_KEYS.demoUrl];
-  if (!isHttps(demo)) {
+  if (demo === undefined) {
+    errors.push(`info: ${SCHEMA_KEYS.demoUrl} is not in the package; enter the video walkthrough URL in the portal dashboard (Review information) before submitting`);
+  } else if (!isHttps(demo)) {
     errors.push(`${SCHEMA_KEYS.demoUrl} must be an https URL`);
-  } else if (/REPLACE-WITH/.test(demo)) {
-    errors.push(`warn: ${SCHEMA_KEYS.demoUrl} is still the placeholder ${demo}; record the demo video and replace it before submitting`);
+  } else if (/REPLACE-WITH|example\.com/.test(demo)) {
+    errors.push(`${SCHEMA_KEYS.demoUrl} is the placeholder ${demo}; remove it from the package and enter the real URL in the portal dashboard`);
   }
 
   const publication = vendor[SCHEMA_KEYS.publication];
@@ -343,7 +345,7 @@ if (require.main === module) {
     console.log(line);
   }
 
-  if (results.some(line => !line.startsWith('warn:'))) {
+  if (results.some(line => !line.startsWith('warn:') && !line.startsWith('info:'))) {
     process.exit(1);
   }
 }
