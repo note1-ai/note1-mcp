@@ -127,8 +127,20 @@ const checkCases = (errors, label, cases, expected, positive) => {
       }
     }
 
-    if (positive && (!Array.isArray(entry?.[SCHEMA_KEYS.caseTools]) || entry[SCHEMA_KEYS.caseTools].length === 0)) {
-      errors.push(`${label}[${index}].${SCHEMA_KEYS.caseTools} is required`);
+    if (positive && (typeof entry?.[SCHEMA_KEYS.caseTools] !== 'string' || entry[SCHEMA_KEYS.caseTools].trim() === '')) {
+      errors.push(`${label}[${index}].${SCHEMA_KEYS.caseTools} must be a non-empty string such as "search_notes, read_note"`);
+    }
+
+    for (const key of ['file_attachment_urls', 'expected_output_url']) {
+      const value = entry?.[key];
+      if (value === undefined) {
+        continue;
+      }
+
+      const valid = key === 'file_attachment_urls' ? Array.isArray(value) && value.every(item => typeof item === 'string') : typeof value === 'string';
+      if (!valid) {
+        errors.push(`${label}[${index}].${key} has the wrong type`);
+      }
     }
 
     if (typeof entry?.[SCHEMA_KEYS.caseDescription] === 'string' && entry[SCHEMA_KEYS.caseDescription].length > 4000) {
@@ -232,8 +244,11 @@ const validateManifest = (dir, errors) => {
 
   const publication = vendor[SCHEMA_KEYS.publication];
   checkString(errors, SCHEMA_KEYS.releaseNotes, publication?.[SCHEMA_KEYS.releaseNotes], 4000);
-  if (!Array.isArray(publication?.[SCHEMA_KEYS.countries])) {
+  const countries = publication?.[SCHEMA_KEYS.countries];
+  if (!Array.isArray(countries)) {
     errors.push(`${SCHEMA_KEYS.countries} must be an array`);
+  } else if (!countries.every(code => typeof code === 'string' && /^[A-Z]{2}$/.test(code))) {
+    errors.push(`${SCHEMA_KEYS.countries} must contain uppercase two-letter country codes`);
   }
 };
 

@@ -44,10 +44,10 @@
         "termsOfServiceURL": "https://note1.ai/docs/terms-of-service",
         "brandColor": "#2563EB",
         "brandColorDark": "#60A5FA",
-        "logo": "assets/logo.png",
-        "logoDark": "assets/logo-dark.png",
-        "composerIcon": "assets/composer-icon.png",
-        "composerIconDark": "assets/composer-icon-dark.png"
+        "logo": "./assets/logo.png",
+        "logoDark": "./assets/logo-dark.png",
+        "composerIcon": "./assets/composer-icon.png",
+        "composerIconDark": "./assets/composer-icon-dark.png"
       },
       "review": {
         "test_cases": {
@@ -55,44 +55,31 @@
             {
               "description": "Asks which section a team is moving to, answered from one meeting with a citation.",
               "prompt": "Which section is the anti-abuse team moving to, and what will that section contain?",
-              "tools_triggered": [
-                "note1_search_meetings"
-              ],
+              "tools_triggered": "note1_search_meetings",
               "expected_behavior": "Searches the user's meetings and answers that anti-abuse moves from Sec to Data Science (a rename of ModelOps), which will have a ModelOps stage and an Anti-abuse stage, citing the engineering staff meeting with its link."
             },
             {
               "description": "Asks for speaker talk time and the questions asked in one meeting.",
               "prompt": "In the security and data science staff meeting, who spoke the most and which questions were asked?",
-              "tools_triggered": [
-                "note1_search_meetings",
-                "note1_get_meeting_insights"
-              ],
+              "tools_triggered": "note1_search_meetings, note1_get_meeting_insights",
               "expected_behavior": "Finds the meeting, then reads speakers with talk-time share and the questions asked from the meeting insights (shown as a talk-time card in ChatGPT), instead of exporting the transcript."
             },
             {
               "description": "Lists open action items across meetings and completes one.",
               "prompt": "List my open action items from both meetings, then mark the first one completed.",
-              "tools_triggered": [
-                "note1_list_action_items",
-                "note1_update_action_item"
-              ],
+              "tools_triggered": "note1_list_action_items, note1_update_action_item",
               "expected_behavior": "Shows the open action items from both meetings in the action-items card with owners and meetings, then marks the first item completed and confirms the change."
             },
             {
               "description": "Asks for a decision made in the product marketing meeting.",
               "prompt": "What tagline did the product marketing team settle on, and why?",
-              "tools_triggered": [
-                "note1_search_meetings"
-              ],
+              "tools_triggered": "note1_search_meetings",
               "expected_behavior": "Answers 'More speed, less risk', chosen because its noun-phrase tone matches the other messaging lines, citing the product marketing meeting."
             },
             {
               "description": "Asks to watch a phrase across meetings with a topic tracker.",
               "prompt": "Start tracking mentions of FedRAMP across my meetings.",
-              "tools_triggered": [
-                "note1_list_topic_trackers",
-                "note1_create_topic_tracker"
-              ],
+              "tools_triggered": "note1_list_topic_trackers, note1_create_topic_tracker",
               "expected_behavior": "Checks existing trackers, creates a personal topic tracker for FedRAMP, and reports where it was already mentioned (the engineering staff meeting)."
             }
           ],
