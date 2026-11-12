@@ -37,7 +37,7 @@ const LIMITS = {
   positiveCases: 5,
   negativeCases: 3,
   minLogoSize: 48,
-  pluginDisplayName: 'note1',
+  pluginDisplayName: 'note1.ai',
 };
 
 const MCP_SCHEMA_URL = 'https://agent-plugins.org/schemas/1.0.0/mcp.schema.json';

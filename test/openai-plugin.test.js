@@ -194,7 +194,7 @@ test('commerce must be a boolean with a non-empty commerce_description', () => {
   });
 });
 
-test('displayName must be exactly note1', () => {
+test('displayName must be exactly note1.ai', () => {
   withTmp(tmp => {
     const dir = copyPluginTo(tmp);
     const p = readJson(dir, 'plugin.json');
