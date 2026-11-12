@@ -1,6 +1,6 @@
 {
   "name": "@note1ai/mcp",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "note1 MCP server connector \u2014 upload recordings, ask about meetings, read insights, manage action items, linked tickets, team integrations and topic trackers, and schedule recordings from Claude, ChatGPT, Cursor, or any MCP client.",
   "keywords": [
     "mcp",

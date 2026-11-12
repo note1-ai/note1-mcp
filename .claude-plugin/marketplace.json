@@ -9,7 +9,7 @@
     {
       "name": "note1",
       "source": "./claude-plugin",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "description": "Work with your note1 meetings, transcripts, action items, topic trackers, integrations and recordings from Claude."
     }
   ]
