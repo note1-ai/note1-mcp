@@ -42,8 +42,8 @@
         "supportURL": "https://note1.ai/docs/support",
         "privacyPolicyURL": "https://note1.ai/docs/privacy-policy",
         "termsOfServiceURL": "https://note1.ai/docs/terms-of-service",
-        "brandColor": "#2438CE",
-        "brandColorDark": "#8B66F4",
+        "brandColor": "#2563EB",
+        "brandColorDark": "#60A5FA",
         "logo": "assets/logo.png",
         "logoDark": "assets/logo-dark.png",
         "composerIcon": "assets/composer-icon.png",
@@ -53,47 +53,47 @@
         "test_cases": {
           "positive": [
             {
-              "description": "Asks what was decided about a topic across recent meetings.",
-              "prompt": "What did we decide about pricing in last week's meetings?",
+              "description": "Asks which section a team is moving to, answered from one meeting with a citation.",
+              "prompt": "Which section is the anti-abuse team moving to, and what will that section contain?",
               "tools_triggered": [
                 "note1_search_meetings"
               ],
-              "expected_behavior": "Searches the user's meetings in analysis mode and answers with the meeting titles, dates and timestamps it is based on."
+              "expected_behavior": "Searches the user's meetings and answers that anti-abuse moves from Sec to Data Science (a rename of ModelOps), which will have a ModelOps stage and an Anti-abuse stage, citing the engineering staff meeting with its link."
             },
             {
-              "description": "Lists the user's open action items and completes one of them.",
-              "prompt": "What are my open action items? Mark the deck one as done.",
-              "tools_triggered": [
-                "note1_list_action_items",
-                "note1_update_action_item"
-              ],
-              "expected_behavior": "Lists the user's open action items, then marks the matching item completed and reports any linked tickets that wait for a decision."
-            },
-            {
-              "description": "Asks for speaker talk-time and unanswered questions in one meeting.",
-              "prompt": "Who spoke the most in yesterday's standup, and which questions went unanswered?",
+              "description": "Asks for speaker talk time and the questions asked in one meeting.",
+              "prompt": "In the security and data science staff meeting, who spoke the most and which questions were asked?",
               "tools_triggered": [
                 "note1_search_meetings",
                 "note1_get_meeting_insights"
               ],
-              "expected_behavior": "Finds yesterday's standup, then reads its speaker talk-time and questions from the meeting insights instead of the transcript."
+              "expected_behavior": "Finds the meeting, then reads speakers with talk-time share and the questions asked from the meeting insights (shown as a talk-time card in ChatGPT), instead of exporting the transcript."
             },
             {
-              "description": "Asks which upcoming calendar events are being recorded.",
-              "prompt": "Which of my meetings tomorrow are being recorded?",
+              "description": "Lists open action items across meetings and completes one.",
+              "prompt": "List my open action items from both meetings, then mark the first one completed.",
               "tools_triggered": [
-                "note1_get_calendar"
+                "note1_list_action_items",
+                "note1_update_action_item"
               ],
-              "expected_behavior": "Lists tomorrow's calendar events with their per-event recording status."
+              "expected_behavior": "Shows the open action items from both meetings in the action-items card with owners and meetings, then marks the first item completed and confirms the change."
+            },
+            {
+              "description": "Asks for a decision made in the product marketing meeting.",
+              "prompt": "What tagline did the product marketing team settle on, and why?",
+              "tools_triggered": [
+                "note1_search_meetings"
+              ],
+              "expected_behavior": "Answers 'More speed, less risk', chosen because its noun-phrase tone matches the other messaging lines, citing the product marketing meeting."
             },
             {
               "description": "Asks to watch a phrase across meetings with a topic tracker.",
-              "prompt": "Start tracking mentions of pricing across our meetings.",
+              "prompt": "Start tracking mentions of FedRAMP across my meetings.",
               "tools_triggered": [
                 "note1_list_topic_trackers",
                 "note1_create_topic_tracker"
               ],
-              "expected_behavior": "Checks existing trackers, then creates a personal topic tracker named for pricing with matching phrases."
+              "expected_behavior": "Checks existing trackers, creates a personal topic tracker for FedRAMP, and reports where it was already mentioned (the engineering staff meeting)."
             }
           ],
           "negative": [
@@ -116,7 +116,7 @@
         "demo_recording_url": "https://example.com/REPLACE-WITH-DEMO-VIDEO"
       },
       "publication": {
-        "release_notes": "Initial ChatGPT plugin release: 32 tools for meetings, action items, notes, trackers, integrations and recordings.",
+        "release_notes": "Initial ChatGPT plugin release: 32 tools for meetings, action items, notes, trackers, integrations and recordings, with interactive action-item, talk-time and note-suggestion cards.",
         "countries": []
       }
     }
