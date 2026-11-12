@@ -160,6 +160,10 @@ const validateManifest = (dir, errors) => {
     checkString(errors, `plugin.json ${field}`, manifest[field], 100);
   }
 
+  if (typeof manifest.name === 'string' && (manifest.name.length > 64 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(manifest.name))) {
+    errors.push('plugin.json name must be lowercase letters, numbers and single hyphens, at most 64 characters');
+  }
+
   checkString(errors, 'description', manifest.description, LIMITS.description);
   if (!isHttps(manifest.author?.url)) {
     errors.push('author.url must be an https URL');

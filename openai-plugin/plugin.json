@@ -1,6 +1,6 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "name": "note1",
+  "name": "app-6a77b05b7a2c8191af3c69c7bf371565",
   "version": "1.3.1",
   "description": "Search your meetings and get answers with cited sources. note1 turns recorded meetings into summaries, speaker-attributed transcripts and action items, and this plugin lets you work with them from a conversation: find what was decided, see who spoke and what was asked, export notes, list and complete action items together with their linked tickets in tools such as GitHub, Linear and Jira, set up topic trackers, check which calendar events are being recorded, schedule or cancel note1's recording bot, and upload an existing recording. Every action uses your own note1 permissions, so private meetings stay private.",
   "author": {
