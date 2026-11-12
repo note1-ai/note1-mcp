@@ -128,10 +128,11 @@ test('commerce, countries and the review cases are present', () => {
   assert.deepEqual(ext.publication.countries, []);
   assert.equal(ext.review.test_cases.positive.length, 5);
   assert.equal(ext.review.test_cases.negative.length, 3);
-  const tools = ext.review.test_cases.positive.flatMap(c => c.tools_triggered);
+  assert.equal(ext.review.demo_recording_url, undefined);
+  const tools = ext.review.test_cases.positive.flatMap(c => c.tools_triggered.split(', '));
   for (const tool of [
     'note1_search_meetings', 'note1_list_action_items', 'note1_update_action_item',
-    'note1_get_meeting_insights', 'note1_get_calendar', 'note1_create_topic_tracker',
+    'note1_get_meeting_insights', 'note1_list_topic_trackers', 'note1_create_topic_tracker',
   ]) {
     assert.ok(tools.includes(tool), tool);
   }
@@ -204,13 +205,13 @@ test('displayName must be exactly note1.ai', () => {
   });
 });
 
-test('mcp.json declares one streamable-http server with dcr auth', () => {
+test('mcp.json declares one streamable-http server with cimd auth (dcr fallback)', () => {
   const mcp = readJson(pluginDir, 'mcp.json');
   const servers = Object.values(mcp.mcpServers ?? mcp.servers);
   assert.equal(servers.length, 1);
   assert.equal(servers[0].type, 'streamable-http');
   assert.equal(servers[0].url, 'https://api.note1.ai/mcp');
-  assert.deepEqual(servers[0].extensions['com.openai'].auth, { type: 'oauth', client: { mode: 'dcr' } });
+  assert.deepEqual(servers[0].extensions['com.openai'].auth, { type: 'oauth', client: { mode: 'cimd' } });
 });
 
 test('a bad mcp.json fails validation', () => {
